@@ -1,6 +1,6 @@
 # 🛑🤖 Hexodus
 
-**Hexodus** es un juego clásico desarrollado como un proyecto de inteligencia artificial para estudiantes de tercer año de Ciencias de la Computación. Este proyecto se centra en la implementación de un jugador de IA altamente eficaz y eficiente para el juegp clásico de HEX, logrando así una experiencia desafiante y atractiva para los usuarios.
+**Hexodus** es un juego clásico desarrollado como un proyecto de inteligencia artificial para estudiantes de tercer año de Ciencias de la Computación. Este proyecto se centra en la implementación de un agente altamente eficaz y eficiente para el juego clásico de HEX, logrando así una experiencia desafiante y atractiva para los usuarios.
 
 ## 📋 Características
 
