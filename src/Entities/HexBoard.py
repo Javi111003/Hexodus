@@ -31,20 +31,16 @@ class HexBoard:
         stack = []
         if len(positions) < n:
             return  False
-        # Según el jugador, definimos los bordes de entrada y condición de victoria
         if player_id == 1:
-            # Jugador 1 conecta de izquierda a derecha (columnas)
             start = [pos for pos in positions if pos[1] == 0]
             condition = lambda fila, col: col == n - 1
         elif player_id == 2:
-            # Jugador 2 conecta de arriba a abajo (filas)
             start = [pos for pos in positions if pos[0] == 0]
             condition = lambda row, col: row == n - 1
         else:
-            return False  # ID inválido
+            return False  # Invalid ID
 
         stack.extend(start)
-
         directions = [(-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0)]
 
         while stack:
@@ -64,6 +60,4 @@ class HexBoard:
                         (nf, nc) not in visited
                 ):
                     stack.append((nf, nc))
-
         return False
-
