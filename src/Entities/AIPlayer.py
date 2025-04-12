@@ -2,25 +2,27 @@ from src.Entities.Player import Player
 from src.Utils.Utils import *
 from src.Utils.Algorithms.A_star import a_star_hex
 
-# Player who chooses his moves with minimax + alpha-beta + safe_bridges
+# Player who chooses his moves with minimax + alpha-beta + a_star(cost_min_path) + safe_bridges
 class AIPlayer(Player):
 
     def __init__(self, player_id: int):
         super().__init__(player_id)
         self.plays_count = 0
-        self.lapse_time = 0
         self.my_safe_bridges = 0
         self.opp_safe_bridges = 0
 
     def play(self, board: HexBoard) -> tuple:
+        n = board.size
+        depth = 2 if n < 20 else 1
+        bridges = n // 2 < self.plays_count or n < 19
         if self.plays_count < 1:
             self.plays_count += 1
             return get_opening_moves(board)
-        self.my_safe_bridges = count_safe_bridges(board, self.player_id)
-        self.opp_safe_bridges = count_safe_bridges(board, 3 - self.player_id)
-        row,col = self.minimax_best_move(board , 2)
+        if bridges:
+            self.my_safe_bridges = count_safe_bridges(board, self.player_id)
+            self.opp_safe_bridges = count_safe_bridges(board, 3 - self.player_id)
+        row,col = self.minimax_best_move(board ,depth ,bridges)
         self.plays_count += 1
-        print(f"El movimiento escogido es ({row,col})")
         return row,col
 
     def minimax(self, board: HexBoard, depth: int, maximizing_player: bool , alpha = -float('inf'), beta = float('inf'), bridges = False) -> float:
@@ -34,7 +36,6 @@ class AIPlayer(Player):
         if maximizing_player:
             max_eval = -float('inf')
             for i , j in get_relevant_moves(board,player_id=self.player_id, bridges=bridges):
-                #print(f"Juega {self.player_id} en ({i, j})")
                 board.place_piece(i,j, self.player_id)
                 self.plays_count+=1
                 new_bridges = count_bridges_around(board, self.player_id, i, j)
@@ -51,7 +52,6 @@ class AIPlayer(Player):
         else:
             min_eval = float('inf')
             for i , j in get_relevant_moves(board,player_id=self.player_id, bridges=bridges):
-                #print(f"Juega {3 - self.player_id} en ({i, j})")
                 board.place_piece(i,j, 3 - self.player_id)
                 self.plays_count+=1
                 new_bridges = count_bridges_around(board,3 - self.player_id, i, j)
@@ -66,15 +66,14 @@ class AIPlayer(Player):
                     break
             return min_eval
 
-    def minimax_best_move(self, board: HexBoard, depth: int):
+    def minimax_best_move(self, board: HexBoard, depth: int, bridges=False):
         best_value = -float('inf')
         best_movement = None
         for row,col in get_relevant_moves(board,player_id=self.player_id,bridges=True):
-            #print(f"Juega {self.player_id} en ({row,col})")
             board.place_piece(row, col, self.player_id)
             new_bridges = count_bridges_around(board,self.player_id,row,col)
             self.my_safe_bridges += new_bridges
-            value = self.minimax(board, depth - 1, False, best_value, float('inf'),True)
+            value = self.minimax(board, depth - 1, False, best_value, float('inf'),bridges)
             remove_piece(board, row, col, self.player_id)
             self.my_safe_bridges -= new_bridges
             if value > best_value:
@@ -82,17 +81,14 @@ class AIPlayer(Player):
                 best_movement = (row,col)
         return best_movement
 
-    # Eval function to estimate cost of a state
+    # Eval function to estimate state cost
     def eval_func(self, board: HexBoard, player_id: int) -> float:
-        w1 = 0.5  # Cercanía con el objetivo
-        w2 = 5  # Virtual connections
-        w3 = 0.3 # Stones count
-        min_path_opp = a_star_hex(board, 3 - player_id)
-        min_path_player = a_star_hex(board, player_id)
-        # print(f"Movimientos minimos de {3 - player_id} son {min_path_opp if min_path_opp is not float('inf') else -1000}")
-        # print(f"Movimientos minimos de {player_id} son {min_path_player}")
-        f1 = min_path_opp - min_path_player if min_path_opp is not float('inf') else -1000  # min_path_opp - min_path_player
+        w1 = 0.8  # Goal proximity (minimum cost to reach target state)
+        w2 = 0.3  # Virtual connections
+        w3 = 0.2 # Stones count
+        cost_min_path_opp = a_star_hex(board, 3 - player_id)
+        cost_min_path_player = a_star_hex(board, player_id)
+        f1 = cost_min_path_opp - cost_min_path_player if cost_min_path_opp is not float('inf') else -1000
         f2 = self.my_safe_bridges - self.opp_safe_bridges
         f3 = len(board.player_positions[3 - self.player_id]) - self.plays_count
-        # print(f"La resta es {f1}")
         return w1 * f1 + w2 * f2 + w3 * f3

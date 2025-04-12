@@ -1,7 +1,3 @@
-from os import times_result
-
-from src.Utils.Algorithms.A_star import a_star_hex
-from src.Utils.Utils import remove_piece, count_safe_bridges, get_opening_moves, get_relevant_moves
 from src.Entities.HexBoard import HexBoard
 
 # Abstract class for player
